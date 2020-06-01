@@ -21,8 +21,8 @@ public class HelloworldApplication {
 	String target;
 
 	private String tableId;
-	private final String instanceId = "testdatabase";
-	private final String projectId = "mypocdata";
+	private String instanceId;
+	private String projectId;
 	private BigtableDataClient dataClient;
 
 	@RestController
@@ -30,13 +30,19 @@ public class HelloworldApplication {
 
 		@GetMapping("/{id}")
 		ModemData hello(@PathVariable("id") String id) {
-
+			
+			//initialize pojo
 			ModemData modemdata = new ModemData();
+			
+			//Get the Big Table settings from environment variables
 			tableId = System.getenv("tableid");
+			instanceId = System.getenv("instanceid");
+			projectId = System.getenv("projectid");
 
-			if (tableId == null) {
-				tableId = "demo2";
-			};
+			//default values for local testing --> Plz ignore thos section
+			if (tableId == null)tableId = "demo2";	
+			if (instanceId == null) instanceId = "testdatabase";
+			if (projectId == null) projectId = "mypocdata";	
 
 			// Creates the settings to configure a bigtable data client.
 			BigtableDataSettings settings = BigtableDataSettings.newBuilder().setProjectId(projectId)
@@ -50,8 +56,10 @@ public class HelloworldApplication {
 				e.printStackTrace();
 			}
 
+			//Read a row by key (Key could be subscriber id or imesv no
 			Row row = dataClient.readRow(tableId, id);
 
+			//If row is read, populate the object
 			if ( row != null) {
 
 				for (RowCell cell : row.getCells()) {
@@ -91,6 +99,8 @@ public class HelloworldApplication {
 					}
 				}
 			};
+			
+			//Close BigTable client
 			dataClient.close();
 			return modemdata;
 		}
