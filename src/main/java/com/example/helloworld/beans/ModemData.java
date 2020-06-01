@@ -3,18 +3,18 @@ package com.example.helloworld.beans;
 public class ModemData {
 	
 
-    String cal_timestamp_time;
+    String call_timestamp_time;
     String cell_id ;
     String subscriber_id;
     String userequipment_imeisv;
     String cell_latitude;
     String cell_longitude;
     String subscriber_msisdn;
-	public String getCal_timestamp_time() {
-		return cal_timestamp_time;
+	public String getcall_timestamp_time() {
+		return call_timestamp_time;
 	}
-	public void setCal_timestamp_time(String cal_timestamp_time) {
-		this.cal_timestamp_time = cal_timestamp_time;
+	public void setcall_timestamp_time(String call_timestamp_time) {
+		this.call_timestamp_time = call_timestamp_time;
 	}
 	public String getCell_id() {
 		return cell_id;

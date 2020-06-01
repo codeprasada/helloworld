@@ -8,11 +8,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.helloworld.beans.ModemData;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
 import com.google.cloud.bigtable.data.v2.models.Row;
 import com.google.cloud.bigtable.data.v2.models.RowCell;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 @SpringBootApplication
 public class HelloworldApplication {
@@ -34,23 +40,33 @@ public class HelloworldApplication {
 			//initialize pojo
 			ModemData modemdata = new ModemData();
 			
+			try {
+				id = URLDecoder.decode(id, StandardCharsets.UTF_8.toString());
+			} catch (UnsupportedEncodingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			System.out.println("We r in" + id);
+			
 			//Get the Big Table settings from environment variables
 			tableId = System.getenv("tableid");
 			instanceId = System.getenv("instanceid");
 			projectId = System.getenv("projectid");
 
 			//default values for local testing --> Plz ignore thos section
-			if (tableId == null)tableId = "demo2";	
+			if (tableId == null)tableId = "test";	
 			if (instanceId == null) instanceId = "testdatabase";
 			if (projectId == null) projectId = "mypocdata";	
-
+					
 			// Creates the settings to configure a bigtable data client.
 			BigtableDataSettings settings = BigtableDataSettings.newBuilder().setProjectId(projectId)
 					.setInstanceId(instanceId).build();
-
+			
 			// Creates a bigtable data client.
 			try {
 				dataClient = BigtableDataClient.create(settings);
+			
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -58,45 +74,26 @@ public class HelloworldApplication {
 
 			//Read a row by key (Key could be subscriber id or imesv no
 			Row row = dataClient.readRow(tableId, id);
-
+           
 			//If row is read, populate the object
 			if ( row != null) {
+				
+				System.out.println("Row is not null");
 
 				for (RowCell cell : row.getCells()) {
-
-					switch(cell.getQualifier().toStringUtf8()) {
-
-					case "cal_timestamp_time":
-						modemdata.setCal_timestamp_time(cell.getValue().toStringUtf8());
-						break;
-
-					case "cell_id":
-						modemdata.setCell_id(cell.getValue().toStringUtf8());	
-						break;
-
-					case "subscriber_id":
-						modemdata.setSubscriber_id(cell.getValue().toStringUtf8());
-						break;
-
-					case "userequipment_imeisv":
-						modemdata.setUserequipment_imeisv(cell.getValue().toStringUtf8());
-						break;
-
-					case "cell_latitude":
-						modemdata.setCell_latitude(cell.getValue().toStringUtf8());
-						break;
-
-					case "cell_longitude":
-						modemdata.setCell_longitude(cell.getValue().toStringUtf8());
-						break;
-
-					case "subscriber_msisdn":
-						modemdata.setSubscriber_msisdn(cell.getValue().toStringUtf8());
-						break;
-
-					default:
-						//continue;
-					}
+					
+					try {
+						modemdata = new ObjectMapper().readValue(cell.getValue().toStringUtf8(), ModemData.class);
+					} catch (JsonMappingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (JsonProcessingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}  
+					
+					break;
+					
 				}
 			};
 			
